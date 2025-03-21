@@ -1,0 +1,8 @@
+## Interface: 110100
+## Title: CursorOutline
+## Notes: Displays an X mark at the mouse cursor position when in combat. Allows scaling the X mark.
+## Author: AAAddons
+## Version: 1.27
+## SavedVariables: CursorOutlineDB
+
+CursorOutline.lua
