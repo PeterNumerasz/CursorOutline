@@ -21,7 +21,7 @@
 ## Installation
 
 1. **Download:**  
-   Download the latest zip file of the addon from [CurseForge]([https://www.curseforge.com/wow/addons/cursoroutline]) or clone this repository.
+   Download the latest zip file of the addon from [CurseForge](https://www.curseforge.com/wow/addons/cursoroutline) or clone this repository.
 
 2. **Extract:**  
    Extract the contents to your World of Warcraft `Interface/AddOns/` folder.
