@@ -33,7 +33,7 @@ function addon:GetOptionsTable()
         get = function() return addon.db.profile.scale end,
         set = function(_, value)
           addon.db.profile.scale = value
-          addon:UpdateXMarkSize()
+          addon:UpdateMarkerSize()
         end,
       },
       marker = {
@@ -53,7 +53,7 @@ function addon:GetOptionsTable()
         get = function() return addon.db.profile.marker end,
         set = function(_, value)
           addon.db.profile.marker = value
-          addon:UpdateXMarkTexture()
+          addon:UpdateMarkerTexture()
         end,
       },
       opacity = {
@@ -66,7 +66,7 @@ function addon:GetOptionsTable()
         get = function() return addon.db.profile.opacity end,
         set = function(_, value)
           addon.db.profile.opacity = value
-          addon:UpdateXMarkOpacity()
+          addon:UpdateMarkerOpacity()
         end,
       },
       showOutOfCombat = {
@@ -76,7 +76,7 @@ function addon:GetOptionsTable()
         get = function() return addon.db.profile.showOutOfCombat end,
         set = function(_, value)
           addon.db.profile.showOutOfCombat = value
-          addon:UpdateXMarkVisibility()
+          addon:UpdateMarkerVisibility()
         end,
       },
     },

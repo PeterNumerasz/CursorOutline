@@ -2,7 +2,7 @@
 ## Title: CursorOutline
 ## Notes: Displays an X mark at the mouse cursor position when in combat. Allows scaling the X mark.
 ## Author: AAAddons
-## Version: 1.0
+## Version: 1.1
 ## SavedVariables: CursorOutlineDB
 
 ## Libraries
