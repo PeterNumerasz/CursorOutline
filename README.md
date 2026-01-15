@@ -1,43 +1,39 @@
-# CursorOutline
+# 🎯 CursorOutline
 
-**CursorOutline** is a World of Warcraft addon that displays a customizable X mark at the mouse cursor position during combat. It offers configuration options for marker type, size, opacity, and a toggle to display the mark even when out of combat.
+**Never lose your cursor again.**
 
-## Features
+CursorOutline is a lightweight, efficient World of Warcraft addon designed to keep your mouse visible during the most chaotic raid encounters and Mythic+ runs.
 
-- **Dynamic Cursor Marker:** Displays an X mark (or other raid target marker) at your cursor when in combat.
-- **Customizable Settings:**  
-  - Scale the marker size.
-  - Choose from eight different raid target markers.
-  - Adjust the marker's opacity.
-  - Toggle the display of the marker when out of combat.
-- **Slash Commands:**  
-  - `/co config` - Open the configuration UI.
-  - `/co scale <value>` - Set the marker scale (0.5 to 2.0).
-  - `/co marker <value>` - Choose the marker (1–8).
-  - `/co opacity <value>` - Set marker opacity (0 to 1).
-  - `/co combat <on|off>` - Toggle display out of combat.
-  - `/co help` - Show available commands.
+If you struggle to spot your mouse pointer amidst spell effects, nameplates, and AoE explosions, this addon is the solution. It attaches a high-visibility texture (like the X marker, Skull, or Star) directly to your cursor.
 
-## Installation
+## 🌟 Why use CursorOutline?
 
-1. **Download:**  
-   Download the latest zip file of the addon from [CurseForge](https://www.curseforge.com/wow/addons/cursoroutline) or clone this repository.
+*   **Ultra Lightweight:** Zero CPU impact. It just works.
+*   **Combat Focused:** Options to show only during combat to keep your UI clean.
+*   **Highly Customizable:** Adjust the **Scale**, **Opacity**, and **Texture** to fit your preference.
+*   **Safe & Conflict-Free:** Uses standalone textures, meaning it **does not** interfere with Raid Targets, DBM, BigWigs, or Method Raid Tools auto-marking.
 
-2. **Extract:**  
-   Extract the contents to your World of Warcraft `Interface/AddOns/` folder.
+## 🔄 An Alternative to StarCursor and CursorTrail
 
-3. **Enable:**  
-   Launch World of Warcraft and enable **CursorOutline** from the AddOns menu.
+If you are looking for a modern, bloat-free **alternative to StarCursor**, **CursorTrail**, or **CursorMod**, this is it. Unlike heavy WeakAuras that do the same thing, CursorOutline is built purely for performance. It provides the visual clarity of **Cursor Glow** or **Mouse Look Handler** utilities without the complex setup.
 
-## Usage
+## 📥 Download
 
-The addon automatically displays the X mark when you enter combat. Use the provided slash commands or the in-game configuration UI (accessible via `/co config`) to adjust the settings to your liking.
+*   **[Download on CurseForge](https://www.curseforge.com/wow/addons/cursoroutline)**
 
-## License
+## ⚙️ Configuration & Usage
 
-This project is licensed under the [Apache License 2.0](LICENSE).
+You can configure everything via the Interface Options menu or use slash commands.
 
-## Credits
+| Command | Description |
+| :--- | :--- |
+| `/co` | Show help message |
+| `/co config` | **Open the configuration GUI** |
+| `/co combat <on/off>` | Toggle "Combat Only" mode (Recommended!) |
+| `/co marker <1-8>` | Change the icon (Star, Circle, Diamond, Skull, etc.) |
+| `/co scale <0.5 - 2.0>` | Make the marker bigger or smaller |
+| `/co opacity <0 - 1>` | Adjust transparency |
 
-- **Author:** AAAddons  
-- Maintained by the [CursorOutline Repository](https://github.com/PeterNumerasz/CursorOutline).
+## 🐞 Feedback & Support
+
+Found a bug or have a suggestion? Please open an issue here on GitHub!
