@@ -1,0 +1,31 @@
+name: Packager
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers the workflow when you push a tag like v1.0, v1.0.1, etc.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # This connects to the Secret you created in GitHub Settings
+      CF_API_KEY: ${{ secrets.CF_API_KEY }} 
+      # This allows the script to create a "Release" on your GitHub page automatically
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }} 
+
+    steps:
+      # 1. Clone your project code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required to generate the changelog from commit messages
+
+      # 2. Run the BigWigs Packager
+      - name: Package and Upload
+        uses: BigWigsMods/packager@v2
+        with:
+          # Arguments:
+          # -w : Check for warnings (and fail if found)
+          # -c : Generate a changelog automatically
+          args: -w -c

@@ -1,16 +1,25 @@
-## Interface: 110105
+## Interface: 11505, 11506, 40400, 40401, 40402, 50001, 110007, 110100, 110105, 110200, 120000, 20504, 30403
 ## Title: CursorOutline
 ## Notes: Displays an X mark at the mouse cursor position when in combat. Allows scaling the X mark.
 ## Author: AAAddons
-## Version: 1.1
+## Version: 1.1.1
 ## SavedVariables: CursorOutlineDB
+## X-Curse-Project-ID: 1225394
 
 ## Libraries
+# 1. Always First
 Libs\LibStub\LibStub.lua
-Libs\AceDB-3.0\AceDB-3.0.lua
-Libs\AceAddon-3.0\AceAddon-3.0.lua
-Libs\AceConsole-3.0\AceConsole-3.0.lua
-Libs\AceConfig-3.0\AceConfig-3.0.lua
+
+# 2. Always Second 
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+
+# 3. The Core Ace Modules 
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
 
 ## Addon Files
 SavedVariablesHandler.lua
