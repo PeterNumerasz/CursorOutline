@@ -1,6 +1,6 @@
-## Interface: 11505, 11506, 40400, 40401, 40402, 50001, 110007, 110100, 110105, 110200, 120000, 20504, 30403
+## Interface: 110007, 110100, 110200, 110207, 120000, 11506, 40402, 50001, 100207, 90207, 80300, 70300, 60200, 50400, 40300, 30403, 30300, 20504, 20400, 11200
 ## Title: CursorOutline
-## Notes: Displays an X mark at the mouse cursor position when in combat. Allows scaling the X mark.
+## Notes: Displays a marker at the mouse cursor position when in combat. Allows for customization via UI or slash commands.
 ## Author: AAAddons
 ## Version: 1.1.1
 ## SavedVariables: CursorOutlineDB
