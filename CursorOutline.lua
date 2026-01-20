@@ -1,7 +1,12 @@
 -- The main file of CursorOutline addon
-
+local addonName = "CursorOutline"
+local addon = LibStub("AceAddon-3.0"):NewAddon(addonName, "AceConsole-3.0", "AceEvent-3.0")
 local AceDB = LibStub("AceDB-3.0")
-local addon = LibStub("AceAddon-3.0"):NewAddon("CursorOutline", "AceConsole-3.0")
+
+-- Performance: Localize Global Functions for the OnUpdate loop
+local GetCursorPosition = GetCursorPosition
+local UIParent = UIParent
+
 addon.defaults = {
   profile = {
     scale = 1.0,
@@ -23,43 +28,19 @@ local RAID_TARGET_MARKERS = {
   "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8", -- Skull
 }
 
--- Helper to get a readable marker name
-local function GetMarkerName(markerIndex)
-  local names = {
-    [1] = "Star",
-    [2] = "Circle",
-    [3] = "Diamond",
-    [4] = "Triangle",
-    [5] = "Moon",
-    [6] = "Square",
-    [7] = "Cross (X)",
-    [8] = "Skull",
-  }
-  return names[markerIndex] or "Unknown"
-end
-
 -- Create the frame for the marker
 local mainFrame = CreateFrame("Frame", "CursorOutlineFrame", UIParent)
+-- CRITICAL FIX: Ensure the frame doesn't intercept mouse clicks
+mainFrame:EnableMouse(false)
+mainFrame:SetFrameStrata("TOOLTIP") -- High strata to ensure it's on top
 local mainTexture = mainFrame:CreateTexture(nil, "OVERLAY")
 
 -- Updates the position of the marker to follow the mouse
-local function UpdateXMarkPosition()
+local function UpdateMarkerPosition()
   local x, y = GetCursorPosition()
+  -- Using EffectiveScale ensures it works correctly even if UI Scale is modified
   local scale = UIParent:GetEffectiveScale()
   mainFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
-end
-
--- Handles combat state changes
-local function OnCombatStateChange(event)
-  if event == "PLAYER_REGEN_DISABLED" then
-    mainFrame:Show()
-    mainFrame:SetScript("OnUpdate", UpdateXMarkPosition)
-  elseif event == "PLAYER_REGEN_ENABLED" then
-    if not addon.db.profile.showOutOfCombat then
-      mainFrame:Hide()
-      mainFrame:SetScript("OnUpdate", nil)
-    end
-  end
 end
 
 -- Initializes the marker frame
@@ -72,76 +53,52 @@ function addon:InitializeFrame()
   self:UpdateMarkerOpacity()
 end
 
--- Test mode (for previewing the marker)
-function addon:EnableTestMode()
-  self.testMode = true
-  mainFrame:Show()
-  mainFrame:SetScript("OnUpdate", UpdateXMarkPosition)
+-----------------------------------------------------------------------
+-- AceAddon Standard Methods
+-----------------------------------------------------------------------
+
+function addon:OnInitialize()
+  -- Initialize Database
+  self.db = AceDB:New("CursorOutlineDB", self.defaults, true)
+  
+  -- Initialize Frame Logic
+  self:InitializeFrame()
+  
+  -- Register Slash Commands
+  self:RegisterChatCommand("co", "HandleSlashCommand")
+  self:RegisterChatCommand("cursoroutline", "HandleSlashCommand")
+
+  -- Initialize Config UI (If loaded)
+  if self.SetupConfigUI then
+    self:SetupConfigUI()
+  end
 end
 
-function addon:DisableTestMode()
-  self.testMode = false
+function addon:OnEnable()
+  -- Register Combat Events using AceEvent
+  self:RegisterEvent("PLAYER_REGEN_DISABLED")
+  self:RegisterEvent("PLAYER_REGEN_ENABLED")
+  
+  -- Initial Visibility Check
+  self:UpdateMarkerVisibility()
+end
+
+-----------------------------------------------------------------------
+-- Logic & Display Updates
+-----------------------------------------------------------------------
+
+function addon:PLAYER_REGEN_DISABLED()
+  -- Enter Combat
+  mainFrame:Show()
+  mainFrame:SetScript("OnUpdate", UpdateMarkerPosition)
+end
+
+function addon:PLAYER_REGEN_ENABLED()
+  -- Leave Combat
   if not self.db.profile.showOutOfCombat then
     mainFrame:Hide()
     mainFrame:SetScript("OnUpdate", nil)
-  else
-    self:UpdateMarkerVisibility()
   end
-end
-
--- Slash command handling with added functionalities for marker, opacity, and combat toggle
-function addon:HandleSlashCommand(input)
-  local command, value = input:match("^(%S+)%s*(%S*)$")
-  command = (command or ""):lower()
-
-  if command == "scale" then
-    addon:setScale()
-  elseif command == "marker" then
-    addon:setMarker()
-  elseif command == "opacity" then
-    addon:updateOpacity()
-  elseif command == "combat" then
-    addon:updateCombatVisibility()
-  elseif command == "config" then
-    addon:openConfigurationUI()
-  elseif command == "help" or command == "" then
-    addon:displayHelp()
-  else
-    addon:Print("Unknown command. Type /co help for a list of commands.")
-  end
-end
-
--- Registers slash commands
-function addon:RegisterSlashCommands()
-  SLASH_CURSOROUTLINE1 = "/co"
-  SLASH_CURSOROUTLINE2 = "/cursoroutline"
-  SlashCmdList["CURSOROUTLINE"] = function(input)
-    if input:lower() == "config" then
-      if Settings and Settings.OpenToCategory then
-        Settings.OpenToCategory("CursorOutline")
-      else
-        if not InterfaceOptionsFrame then
-          C_AddOns.LoadAddOn("Blizzard_InterfaceOptions")
-        end
-        if InterfaceOptionsFrame_OpenToCategory then
-          InterfaceOptionsFrame_OpenToCategory("CursorOutline")
-          InterfaceOptionsFrame_OpenToCategory("CursorOutline")
-        else
-          addon:Print("Unable to open the configuration UI. Please try again.")
-        end
-      end
-    else
-      addon:HandleSlashCommand(input)
-    end
-  end
-end
-
--- Initialization
-function addon:onInitialize()
-  self.db = AceDB:New("CursorOutlineDB", self.defaults, true)
-  self:RegisterSlashCommands()
-  self:InitializeFrame()
-  self:UpdateMarkerVisibility()
 end
 
 function addon:UpdateMarkerSize()
@@ -161,17 +118,53 @@ function addon:UpdateMarkerOpacity()
 end
 
 function addon:UpdateMarkerVisibility()
-  if self.db.profile.showOutOfCombat then
+  if self.db.profile.showOutOfCombat or InCombatLockdown() or self.testMode then
     mainFrame:Show()
-    mainFrame:SetScript("OnUpdate", UpdateXMarkPosition)
+    mainFrame:SetScript("OnUpdate", UpdateMarkerPosition)
   else
     mainFrame:Hide()
     mainFrame:SetScript("OnUpdate", nil)
   end
 end
 
-function addon:setScale()
-  if value == "" then
+-- Test mode (for previewing the marker from Config)
+function addon:EnableTestMode()
+  self.testMode = true
+  self:UpdateMarkerVisibility()
+end
+
+function addon:DisableTestMode()
+  self.testMode = false
+  self:UpdateMarkerVisibility()
+end
+
+-----------------------------------------------------------------------
+-- Slash Command Logic
+-----------------------------------------------------------------------
+
+function addon:HandleSlashCommand(input)
+  local command, value = input:match("^(%S+)%s*(%S*)$")
+  command = (command or ""):lower()
+
+  if command == "scale" then
+    self:setScale(value) -- BUG FIX: Passed 'value'
+  elseif command == "marker" then
+    self:setMarker(value) -- BUG FIX: Passed 'value'
+  elseif command == "opacity" then
+    self:updateOpacity(value) -- BUG FIX: Passed 'value'
+  elseif command == "combat" then
+    self:updateCombatVisibility(value) -- BUG FIX: Passed 'value'
+  elseif command == "config" then
+    self:openConfigurationUI()
+  elseif command == "help" or command == "" then
+    self:displayHelp()
+  else
+    self:Print("Unknown command. Type /co help for a list of commands.")
+  end
+end
+
+function addon:setScale(value) -- BUG FIX: Added parameter
+  if not value or value == "" then
     self:Print("Current scale is " .. self.db.profile.scale)
     self:Print("Usage: /co scale <value> (0.5 to 2.0)")
   else
@@ -186,25 +179,41 @@ function addon:setScale()
   end
 end
 
-function addon:setMarker()
-  if value == "" then
+function addon:setMarker(value) -- BUG FIX: Added parameter
+  if not value or value == "" then
     local current = self.db.profile.marker
-    self:Print("Current marker is " .. current .. " (" .. GetMarkerName(current) .. ").")
+    self:Print("Current marker is " .. current)
     self:Print("Usage: /co marker <value> (1-8)")
   else
     local marker = tonumber(value)
     if marker and marker >= 1 and marker <= 8 then
       self.db.profile.marker = marker
       self:UpdateMarkerTexture()
-      self:Print("Marker set to " .. marker .. " (" .. GetMarkerName(marker) .. ").")
+      self:Print("Marker set to " .. marker)
     else
       self:Print("Marker must be a number between 1 and 8.")
     end
   end
 end
 
-function addon:updateCombatVisibility()
-  if value == "" then
+function addon:updateOpacity(value) -- BUG FIX: Added parameter
+  if not value or value == "" then
+    self:Print("Current opacity is " .. self.db.profile.opacity)
+    self:Print("Usage: /co opacity <value> (0 to 1)")
+  else
+    local opacity = tonumber(value)
+    if opacity and opacity >= 0 and opacity <= 1 then
+      self.db.profile.opacity = opacity
+      self:UpdateMarkerOpacity()
+      self:Print("Opacity set to " .. opacity)
+    else
+      self:Print("Opacity must be a number between 0 and 1.")
+    end
+  end
+end
+
+function addon:updateCombatVisibility(value) -- BUG FIX: Added parameter
+  if not value or value == "" then
     local status = self.db.profile.showOutOfCombat and "on" or "off"
     self:Print("Show Out of Combat is currently " .. status)
     self:Print("Usage: /co combat <on|off>")
@@ -224,35 +233,20 @@ function addon:updateCombatVisibility()
   end
 end
 
-function addon:updateOpacity()
-  if value == "" then
-    self:Print("Current opacity is " .. self.db.profile.opacity)
-    self:Print("Usage: /co opacity <value> (0 to 1)")
-  else
-    local opacity = tonumber(value)
-    if opacity and opacity >= 0 and opacity <= 1 then
-      self.db.profile.opacity = opacity
-      self:UpdateMarkerOpacity()
-      self:Print("Opacity set to " .. opacity)
-    else
-      self:Print("Opacity must be a number between 0 and 1.")
-    end
-  end
-end
-
 function addon:openConfigurationUI()
-  -- Open configuration UI if "config" command is used
+  -- Modern approach to opening Settings
   if Settings and Settings.OpenToCategory then
-    Settings.OpenToCategory("CursorOutline")
+    Settings.OpenToCategory(addonName)
   else
+    -- Fallback for legacy (Wrath/Classic eras)
     if not InterfaceOptionsFrame then
       C_AddOns.LoadAddOn("Blizzard_InterfaceOptions")
     end
     if InterfaceOptionsFrame_OpenToCategory then
-      InterfaceOptionsFrame_OpenToCategory("CursorOutline")
-      InterfaceOptionsFrame_OpenToCategory("CursorOutline")
+      InterfaceOptionsFrame_OpenToCategory(addonName)
+      InterfaceOptionsFrame_OpenToCategory(addonName) -- Twice to force redraw bug in old clients
     else
-      self:Print("Unable to open the configuration UI. Please try again.")
+      self:Print("Unable to open the configuration UI.")
     end
   end
 end
@@ -261,21 +255,8 @@ function addon:displayHelp()
   self:Print("CursorOutline Commands:")
   self:Print("/co - Show this help message.")
   self:Print("/co config - Open the configuration UI.")
-  self:Print("/co scale <value> - Set the size of the X mark (0.5 = half size, 1.0 = default, 2.0 = double size).")
+  self:Print("/co scale <value> - Set the size of the X mark (0.5 to 2.0).")
   self:Print("/co marker <value> - Set the raid target marker (1-8).")
   self:Print("/co opacity <value> - Set the X mark opacity (0 to 1).")
   self:Print("/co combat <on|off> - Toggle displaying the X mark out of combat.")
 end
-
--- Event registration
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
-eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-eventFrame:SetScript("OnEvent", function(self, event, ...)
-  if event == "ADDON_LOADED" then
-    addon:onInitialize()
-  elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
-    OnCombatStateChange(event)
-  end
-end)
