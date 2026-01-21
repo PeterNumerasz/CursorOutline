@@ -5,8 +5,14 @@ local AceDB = LibStub("AceDB-3.0")
 
 local GetCursorPosition = GetCursorPosition
 local UIParent = UIParent
-local GetSpecialization = GetSpecialization
-local GetSpecializationInfo = GetSpecializationInfo
+
+-- FEATURE DETECTION:
+-- We check if the Game Client supports Specializations (MoP 5.0+).
+-- If GetSpecialization exists in the global namespace, we belong to Group 1 (Spec Support).
+-- If not (Vanilla, TBC, WotLK, Cata 4.3), we belong to Group 2 (Global Only).
+local GetSpecialization = _G.GetSpecialization
+local GetSpecializationInfo = _G.GetSpecializationInfo
+local SUPPORTS_SPECS = (GetSpecialization ~= nil)
 
 -- Path shortcut
 local P = "Interface\\AddOns\\CursorOutline\\Textures\\Specs\\"
@@ -16,7 +22,7 @@ local SPEC_TEXTURES = {
     -- Death Knight
     [250] = P.."DeathKnight_Blood.tga", [251] = P.."DeathKnight_Frost.tga", [252] = P.."DeathKnight_Unholy.tga",
     -- Demon Hunter
-    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga", [1480] = P.."DemonHunter_Devourer.tga",
+    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga", [1475] = P.."DemonHunter_Devourer.tga", -- Placeholder ID
     -- Druid
     [102] = P.."Druid_Balance.tga", [103] = P.."Druid_Feral.tga", [104] = P.."Druid_Guardian.tga", [105] = P.."Druid_Restoration.tga",
     -- Evoker
@@ -81,11 +87,14 @@ local mainTexture = mainFrame:CreateTexture(nil, "OVERLAY")
 
 function addon:GetActiveProfile()
     local p = self.db.profile
-    if p.useSpecProfiles then
+    
+    -- GROUP 1: Feature Supported (MoP+)
+    if SUPPORTS_SPECS and p.useSpecProfiles then
         local specIndex = GetSpecialization()
         if specIndex then
             local specID = GetSpecializationInfo(specIndex)
             if specID then
+                -- Initial Setup for this Spec
                 if not p.specs[specID] then
                     local defaultIcon = SPEC_TEXTURES[specID]
                     local startMode = defaultIcon and "CUSTOM" or "RAID_MARKER"
@@ -103,6 +112,9 @@ function addon:GetActiveProfile()
             end
         end
     end
+    
+    -- GROUP 2: Feature Not Supported OR User Disabled it
+    -- Fallback to Global Profile
     if not p.global then p.global = {} end
     return p.global
 end
@@ -130,11 +142,13 @@ function addon:UpdateMarkerAppearance()
     if settings.customShape == "CUSTOM_FILE_INPUT" then
         textureToUse = "Interface\\AddOns\\CursorOutline\\Textures\\Custom\\" .. (settings.customFilePath or "")
     end
+    
     if textureToUse and textureToUse ~= "" then
         mainTexture:SetTexture(textureToUse)
     else
         mainTexture:SetTexture("Interface\\BUTTONS\\WHITE8X8")
     end
+    
     mainTexture:SetVertexColor(settings.customColor.r, settings.customColor.g, settings.customColor.b, settings.customColor.a)
     mainTexture:SetBlendMode("BLEND") 
   else
@@ -171,7 +185,12 @@ end
 function addon:OnEnable()
   self:RegisterEvent("PLAYER_REGEN_DISABLED")
   self:RegisterEvent("PLAYER_REGEN_ENABLED")
-  self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+  
+  -- Only register spec changes if the client supports specs
+  if SUPPORTS_SPECS then
+      self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+  end
+  
   self:UpdateMarkerAppearance()
   self:UpdateMarkerVisibility()
 end
@@ -249,10 +268,7 @@ end
 function addon:openConfigurationUI()
   -- MODERN RETAIL (11.0+)
   if SettingsPanel then
-      -- 1. Ensure the Settings Panel is open first
       SettingsPanel:Open()
-      
-      -- 2. Find our Category Object (not the ID, the whole object)
       local categoryObject = nil
       if SettingsPanel.GetAllCategories then
           for _, cat in pairs(SettingsPanel:GetAllCategories()) do
@@ -262,14 +278,9 @@ function addon:openConfigurationUI()
               end
           end
       end
-      
-      -- 3. Select it directly
-      if categoryObject then
-          -- This function accepts the Object, bypassing the broken Number ID check
-          SettingsPanel:SelectCategory(categoryObject)
-      end
+      if categoryObject then SettingsPanel:SelectCategory(categoryObject) end
 
-  -- LEGACY (Classic / Wrath)
+  -- LEGACY (Classic / Wrath / Cata)
   else
     if not InterfaceOptionsFrame then C_AddOns.LoadAddOn("Blizzard_InterfaceOptions") end
     if InterfaceOptionsFrame_OpenToCategory then
@@ -277,7 +288,6 @@ function addon:openConfigurationUI()
         InterfaceOptionsFrame_OpenToCategory(addonName)
     end
   end
-  
   if self.ForceRedraw then self:ForceRedraw() end
 end
 

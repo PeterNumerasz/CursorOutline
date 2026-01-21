@@ -6,11 +6,14 @@ CursorOutline is a lightweight, efficient World of Warcraft addon designed to ke
 
 If you struggle to spot your mouse pointer amidst spell effects, nameplates, and AoE explosions, this addon is the solution. It attaches a high-visibility texture (like the X marker, Skull, or Star) directly to your cursor.
 
-# ✨ New in v1.2.0: Class Identity
-CursorOutline now adapts to **you**.
+# ✨ New in v1.4.0: Class Identity & Compatibility
 
-* **39 New Class/Spec Icons:** The addon automatically detects your Specialization and sets a matching cursor icon (e.g., a Fire icon for Fire Mages, a Shield for Protection Warriors).
-* **Smart Profiles:** Enable "Spec Profiles" to have the addon remember different shapes, sizes, and colors for every specialization you play. Switch from Healing to DPS, and your cursor updates automatically.
+CursorOutline is now fully universal, supporting Retail, Classic, and legacy clients.
+
+*   **39 New Class/Spec Icons:** Automatically sets a matching cursor icon (e.g., a Fire icon for Fire Mages) on modern clients.
+*   **Smart Profiles:**
+    *   **Modern WoW (Retail / MoP+):** Enables "Spec Profiles". Settings are saved per-specialization (switch specs, cursor updates automatically).
+    *   **Legacy WoW (Vanilla / TBC / WotLK):** Automatically defaults to "Global Mode". Settings apply to the character globally since these versions lack Specializations.
 
 ## 🌟 Key Features
 * Ultra Lightweight: Zero CPU impact. It just works.
