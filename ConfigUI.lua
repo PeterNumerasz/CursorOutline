@@ -24,7 +24,6 @@ local CLASS_PREFIXES = {
     ["WARRIOR"] = "Warrior",
 }
 
--- All Specs + The Custom File Option
 local CUSTOM_SHAPES = {
   ["CUSTOM_FILE_INPUT"] = " [!] Custom File (Type Name Below)",
 
@@ -95,7 +94,6 @@ local CUSTOM_SHAPES = {
   [P.."Warrior_Protection.tga"] = "Warrior: Protection",
 }
 
--- Smart Filter Function
 local function GetFilteredShapes()
     if addon.db.profile.showAllShapes then
         return CUSTOM_SHAPES
@@ -184,7 +182,10 @@ function addon:GetOptionsTable()
             order = 0,
             type = "description",
             name = function() 
-               if addon.db.profile.useSpecProfiles then
+               -- CHECK: If GetSpecialization doesn't exist (Vanilla, WotLK), show Legacy text
+               if not _G.GetSpecialization then
+                  return "Legacy Mode: Using Global Profile (Game version lacks specs)."
+               elseif addon.db.profile.useSpecProfiles then
                   return "|cff00ff00[Spec Profile Active]|r Settings are saved for your current spec."
                else
                   return "Settings apply to all characters."
@@ -197,6 +198,8 @@ function addon:GetOptionsTable()
             name = "Enable Spec Profiles",
             desc = "If enabled, your Shape, Color, and Size will be saved separately for each Specialization.",
             width = "full",
+            -- CHECK: Hide the toggle on Legacy versions
+            hidden = function() return not _G.GetSpecialization end,
             get = function() return addon.db.profile.useSpecProfiles end,
             set = function(_, val)
                addon.db.profile.useSpecProfiles = val
