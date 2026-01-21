@@ -2,7 +2,7 @@
 ## Title: CursorOutline
 ## Notes: Track your cursor with Raid Markers or Class Spec Icons. Supports per-spec profiles.
 ## Author: AAAddons
-## Version: 1.2.0
+## Version: 1.3.0
 ## SavedVariables: CursorOutlineDB
 ## X-Curse-Project-ID: 1225394
 
