@@ -16,7 +16,7 @@ local SPEC_TEXTURES = {
     -- Death Knight
     [250] = P.."DeathKnight_Blood.tga", [251] = P.."DeathKnight_Frost.tga", [252] = P.."DeathKnight_Unholy.tga",
     -- Demon Hunter
-    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga",
+    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga", [1480] = P.."DemonHunter_Devourer.tga",
     -- Druid
     [102] = P.."Druid_Balance.tga", [103] = P.."Druid_Feral.tga", [104] = P.."Druid_Guardian.tga", [105] = P.."Druid_Restoration.tga",
     -- Evoker
@@ -41,24 +41,20 @@ local SPEC_TEXTURES = {
     [71] = P.."Warrior_Arms.tga", [72] = P.."Warrior_Fury.tga", [73] = P.."Warrior_Protection.tga",
 }
 
--- Standard Defaults (Used if no profile exists)
 addon.defaults = {
   profile = {
     showOutOfCombat = false, 
     useSpecProfiles = false,
     showAllShapes = false,
-
-    -- Default "Global" settings
     global = {
         mode = "RAID_MARKER",
         markerIndex = 7,
         customShape = "", 
-        customFilePath = "", -- New Field for custom filenames
+        customFilePath = "",
         customColor = { r = 1, g = 1, b = 1, a = 1 },
         scale = 1.0,
         opacity = 1.0,
     },
-
     specs = {}, 
   },
 }
@@ -85,23 +81,19 @@ local mainTexture = mainFrame:CreateTexture(nil, "OVERLAY")
 
 function addon:GetActiveProfile()
     local p = self.db.profile
-    
     if p.useSpecProfiles then
         local specIndex = GetSpecialization()
         if specIndex then
             local specID = GetSpecializationInfo(specIndex)
             if specID then
-                -- INTELLIGENT DEFAULTING
                 if not p.specs[specID] then
                     local defaultIcon = SPEC_TEXTURES[specID]
-                    
                     local startMode = defaultIcon and "CUSTOM" or "RAID_MARKER"
-                    
                     p.specs[specID] = {
                         mode = startMode,
                         markerIndex = 7, 
                         customShape = defaultIcon or "", 
-                        customFilePath = "", -- Default empty
+                        customFilePath = "",
                         customColor = { r = 1, g = 1, b = 1, a = 1 }, 
                         scale = 1.0,
                         opacity = 1.0,
@@ -111,20 +103,7 @@ function addon:GetActiveProfile()
             end
         end
     end
-    
-    -- Fallback: Use Global
     if not p.global then p.global = {} end
-    if not p.global.mode and p.mode then
-        -- Migration logic
-        p.global.mode = p.mode
-        p.global.markerIndex = p.markerIndex
-        p.global.customShape = p.customShape
-        p.global.customFilePath = "" -- Ensure key exists
-        p.global.customColor = p.customColor
-        p.global.scale = p.scale
-        p.global.opacity = p.opacity
-    end
-    
     return p.global
 end
 
@@ -144,36 +123,26 @@ end
 
 function addon:UpdateMarkerAppearance()
   local settings = self:GetActiveProfile()
-  
-  -- 1. Set Size
   mainFrame:SetSize(38 * settings.scale, 38 * settings.scale)
   
-  -- 2. Set Texture & Color
   if settings.mode == "CUSTOM" then
     local textureToUse = settings.customShape
-    
-    -- LOGIC: If "Custom File" mode, look in the Custom folder
     if settings.customShape == "CUSTOM_FILE_INPUT" then
         textureToUse = "Interface\\AddOns\\CursorOutline\\Textures\\Custom\\" .. (settings.customFilePath or "")
     end
-    
-    -- Safety check to avoid green boxes if string is empty
     if textureToUse and textureToUse ~= "" then
         mainTexture:SetTexture(textureToUse)
     else
-        mainTexture:SetTexture("Interface\\BUTTONS\\WHITE8X8") -- Fallback
+        mainTexture:SetTexture("Interface\\BUTTONS\\WHITE8X8")
     end
-
     mainTexture:SetVertexColor(settings.customColor.r, settings.customColor.g, settings.customColor.b, settings.customColor.a)
     mainTexture:SetBlendMode("BLEND") 
   else
-    -- RAID MARKER MODE
     local texturePath = RAID_TARGET_MARKERS[settings.markerIndex]
     mainTexture:SetTexture(texturePath)
     mainTexture:SetVertexColor(1, 1, 1, settings.opacity)
     mainTexture:SetBlendMode("BLEND")
   end
-  
   mainTexture:SetAllPoints(mainFrame)
 end
 
@@ -194,10 +163,8 @@ end
 function addon:OnInitialize()
   self.db = AceDB:New("CursorOutlineDB", self.defaults, true)
   mainFrame:SetPoint("CENTER", UIParent, "CENTER"); mainFrame:Hide()
-  
   self:RegisterChatCommand("co", "HandleSlashCommand")
   self:RegisterChatCommand("cursoroutline", "HandleSlashCommand")
-  
   if self.SetupConfigUI then self:SetupConfigUI() end
 end
 
@@ -205,7 +172,6 @@ function addon:OnEnable()
   self:RegisterEvent("PLAYER_REGEN_DISABLED")
   self:RegisterEvent("PLAYER_REGEN_ENABLED")
   self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-  
   self:UpdateMarkerAppearance()
   self:UpdateMarkerVisibility()
 end
@@ -281,12 +247,35 @@ function addon:updateCombatVisibility(value)
 end
 
 function addon:openConfigurationUI()
-  if Settings and Settings.OpenToCategory then
-    Settings.OpenToCategory(addonName)
+  -- MODERN RETAIL (11.0+)
+  if SettingsPanel then
+      -- 1. Ensure the Settings Panel is open first
+      SettingsPanel:Open()
+      
+      -- 2. Find our Category Object (not the ID, the whole object)
+      local categoryObject = nil
+      if SettingsPanel.GetAllCategories then
+          for _, cat in pairs(SettingsPanel:GetAllCategories()) do
+              if cat.name == addonName then
+                  categoryObject = cat
+                  break
+              end
+          end
+      end
+      
+      -- 3. Select it directly
+      if categoryObject then
+          -- This function accepts the Object, bypassing the broken Number ID check
+          SettingsPanel:SelectCategory(categoryObject)
+      end
+
+  -- LEGACY (Classic / Wrath)
   else
     if not InterfaceOptionsFrame then C_AddOns.LoadAddOn("Blizzard_InterfaceOptions") end
-    InterfaceOptionsFrame_OpenToCategory(addonName)
-    InterfaceOptionsFrame_OpenToCategory(addonName)
+    if InterfaceOptionsFrame_OpenToCategory then
+        InterfaceOptionsFrame_OpenToCategory(addonName)
+        InterfaceOptionsFrame_OpenToCategory(addonName)
+    end
   end
   
   if self.ForceRedraw then self:ForceRedraw() end

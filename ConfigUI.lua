@@ -26,7 +26,6 @@ local CLASS_PREFIXES = {
 
 -- All Specs + The Custom File Option
 local CUSTOM_SHAPES = {
-  -- SPECIAL OPTION: MANUAL INPUT
   ["CUSTOM_FILE_INPUT"] = " [!] Custom File (Type Name Below)",
 
   -- Death Knight
@@ -37,6 +36,7 @@ local CUSTOM_SHAPES = {
   -- Demon Hunter
   [P.."DemonHunter_Havoc.tga"] = "DH: Havoc",
   [P.."DemonHunter_Vengeance.tga"] = "DH: Vengeance",
+  [P.."DemonHunter_Devourer.tga"] = "DH: Devourer",
   
   -- Druid
   [P.."Druid_Balance.tga"] = "Druid: Balance",
@@ -106,7 +106,6 @@ local function GetFilteredShapes()
     local prefix = CLASS_PREFIXES[classTag] or "Unknown"
     
     local filtered = {}
-    -- Always include the Manual Input option
     filtered["CUSTOM_FILE_INPUT"] = CUSTOM_SHAPES["CUSTOM_FILE_INPUT"]
     
     for path, label in pairs(CUSTOM_SHAPES) do
@@ -248,7 +247,7 @@ function addon:GetOptionsTable()
             set = function(_, value)
               addon:GetActiveProfile().customShape = value
               addon:UpdateMarkerAppearance()
-              addon:ForceRedraw() -- Redraw to show/hide the file input box
+              addon:ForceRedraw() 
             end,
           },
           
@@ -305,6 +304,10 @@ function addon:GetOptionsTable()
     },
   }
 end
+
+-- -------------------------------------------------------------------
+-- Initialization
+-- -------------------------------------------------------------------
 
 function addon:SetupConfigUI()
   AceConfig:RegisterOptionsTable("CursorOutline", addon:GetOptionsTable())
