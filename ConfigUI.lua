@@ -182,7 +182,7 @@ function addon:GetOptionsTable()
             order = 0,
             type = "description",
             name = function() 
-               -- CHECK: If GetSpecialization doesn't exist (Vanilla, WotLK, Old Cata), show Legacy text
+               -- CHECK: If GetSpecialization doesn't exist (Vanilla, WotLK), show Legacy text
                if not _G.GetSpecialization then
                   return "Legacy Mode: Using Global Profile (Game version lacks specs)."
                elseif addon.db.profile.useSpecProfiles then

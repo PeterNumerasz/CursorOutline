@@ -12,7 +12,7 @@ CursorOutline is now fully universal, supporting Retail, Classic, and legacy cli
 
 *   **39 New Class/Spec Icons:** Automatically sets a matching cursor icon (e.g., a Fire icon for Fire Mages) on modern clients.
 *   **Smart Profiles:**
-    *   **Modern WoW (Retail / MoP+):** Enables "Spec Profiles". Settings are saved per-specialization (switch specs, cursor updates automatically).
+    *   **Modern WoW (Retail):** Enables "Spec Profiles". Settings are saved per-specialization (switch specs, cursor updates automatically).
     *   **Legacy WoW (Vanilla / TBC / WotLK):** Automatically defaults to "Global Mode". Settings apply to the character globally since these versions lack Specializations.
 
 ## 🌟 Key Features

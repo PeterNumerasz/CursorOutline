@@ -7,9 +7,9 @@ local GetCursorPosition = GetCursorPosition
 local UIParent = UIParent
 
 -- FEATURE DETECTION:
--- We check if the Game Client supports Specializations (MoP 5.0+).
--- If GetSpecialization exists in the global namespace, we belong to Group 1 (Spec Support).
--- If not (Vanilla, TBC, WotLK, Cata 4.3), we belong to Group 2 (Global Only).
+-- The addon checks if the Game Client supports Specializations
+-- If GetSpecialization exists in the global namespace, the version belong to Group 1 (Spec Support).
+-- If not (Vanilla, TBC, WotLK), the version belong to Group 2 (Global Only).
 local GetSpecialization = _G.GetSpecialization
 local GetSpecializationInfo = _G.GetSpecializationInfo
 local SUPPORTS_SPECS = (GetSpecialization ~= nil)
@@ -22,7 +22,7 @@ local SPEC_TEXTURES = {
     -- Death Knight
     [250] = P.."DeathKnight_Blood.tga", [251] = P.."DeathKnight_Frost.tga", [252] = P.."DeathKnight_Unholy.tga",
     -- Demon Hunter
-    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga", [1475] = P.."DemonHunter_Devourer.tga", -- Placeholder ID
+    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga", [1480] = P.."DemonHunter_Devourer.tga", 
     -- Druid
     [102] = P.."Druid_Balance.tga", [103] = P.."Druid_Feral.tga", [104] = P.."Druid_Guardian.tga", [105] = P.."Druid_Restoration.tga",
     -- Evoker
@@ -88,7 +88,7 @@ local mainTexture = mainFrame:CreateTexture(nil, "OVERLAY")
 function addon:GetActiveProfile()
     local p = self.db.profile
     
-    -- GROUP 1: Feature Supported (MoP+)
+    -- GROUP 1: Feature Supported
     if SUPPORTS_SPECS and p.useSpecProfiles then
         local specIndex = GetSpecialization()
         if specIndex then
@@ -266,7 +266,7 @@ function addon:updateCombatVisibility(value)
 end
 
 function addon:openConfigurationUI()
-  -- MODERN RETAIL (11.0+)
+  -- Retail
   if SettingsPanel then
       SettingsPanel:Open()
       local categoryObject = nil
@@ -280,7 +280,7 @@ function addon:openConfigurationUI()
       end
       if categoryObject then SettingsPanel:SelectCategory(categoryObject) end
 
-  -- LEGACY (Classic / Wrath / Cata)
+  -- LEGACY (Classic / Wrath)
   else
     if not InterfaceOptionsFrame then C_AddOns.LoadAddOn("Blizzard_InterfaceOptions") end
     if InterfaceOptionsFrame_OpenToCategory then
