@@ -51,3 +51,6 @@ You can configure everything via the Interface Options menu or use slash command
 ## 🐞 Feedback & Support
 
 Found a bug or have a suggestion? Please open an issue here on GitHub!
+
+# Credits
+Icons by Game-Icons.net
