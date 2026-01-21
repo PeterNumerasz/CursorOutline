@@ -308,6 +308,10 @@ function addon:GetOptionsTable()
   }
 end
 
+-- -------------------------------------------------------------------
+-- Initialization
+-- -------------------------------------------------------------------
+
 function addon:SetupConfigUI()
   AceConfig:RegisterOptionsTable("CursorOutline", addon:GetOptionsTable())
   AceConfigDialog:AddToBlizOptions("CursorOutline", "CursorOutline")
