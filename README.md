@@ -6,16 +6,32 @@ CursorOutline is a lightweight, efficient World of Warcraft addon designed to ke
 
 If you struggle to spot your mouse pointer amidst spell effects, nameplates, and AoE explosions, this addon is the solution. It attaches a high-visibility texture (like the X marker, Skull, or Star) directly to your cursor.
 
-## 🌟 Why use CursorOutline?
+# ✨ New in v1.2.0: Class Identity
+CursorOutline now adapts to **you**.
 
-*   **Ultra Lightweight:** Zero CPU impact. It just works.
-*   **Combat Focused:** Options to show only during combat to keep your UI clean.
-*   **Highly Customizable:** Adjust the **Scale**, **Opacity**, and **Texture** to fit your preference.
-*   **Safe & Conflict-Free:** Uses standalone textures, meaning it **does not** interfere with Raid Targets, DBM, BigWigs, or Method Raid Tools auto-marking.
+* **39 New Class/Spec Icons:** The addon automatically detects your Specialization and sets a matching cursor icon (e.g., a Fire icon for Fire Mages, a Shield for Protection Warriors).
+* **Smart Profiles:** Enable "Spec Profiles" to have the addon remember different shapes, sizes, and colors for every specialization you play. Switch from Healing to DPS, and your cursor updates automatically.
+
+## 🌟 Key Features
+* Ultra Lightweight: Zero CPU impact. It just works.
+* Combat Focused: Options to show only during combat to keep your UI clean.
+* Highly Customizable:
+    * Classic Mode: Use standard Raid Markers (Star, Skull, Diamond, etc.).
+    * Custom Mode: Use class icons or flat shapes and color them using the built-in Color Picker.
+* Safe & Conflict-Free: Uses standalone textures, meaning it does not interfere with Raid Targets, DBM, BigWigs, or Method Raid Tools auto-marking.
 
 ## 🔄 An Alternative to StarCursor and CursorTrail
 
 If you are looking for a modern, bloat-free **alternative to StarCursor**, **CursorTrail**, or **CursorMod**, this is it. Unlike heavy WeakAuras that do the same thing, CursorOutline is built purely for performance. It provides the visual clarity of **Cursor Glow** or **Mouse Look Handler** utilities without the complex setup.
+
+## 🎨 How to use Custom Textures
+Want to use your own image? CursorOutline includes developer tools to help you import any icon!
+
+1. Navigate to Interface/AddOns/CursorOutline/Tools/.
+2. Follow the instructions in INSTRUCTIONS.md to use the included Python Script.
+3. The script converts your PNGs into WoW-compatible TGA files.
+4. Place your new files in Textures/Custom/.
+5. In-game, select "[!] Custom File" in the shape dropdown and type your filename.
 
 ## 📥 Download
 
@@ -30,9 +46,7 @@ You can configure everything via the Interface Options menu or use slash command
 | `/co` | Show help message |
 | `/co config` | **Open the configuration GUI** |
 | `/co combat <on/off>` | Toggle "Combat Only" mode (Recommended!) |
-| `/co marker <1-8>` | Change the icon (Star, Circle, Diamond, Skull, etc.) |
 | `/co scale <0.5 - 2.0>` | Make the marker bigger or smaller |
-| `/co opacity <0 - 1>` | Adjust transparency |
 
 ## 🐞 Feedback & Support
 

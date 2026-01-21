@@ -1,0 +1,7 @@
+ignore:
+    - .git
+    - .github
+    - .gitignore
+    - Tools
+    - requirements.txt
+    - release.yml

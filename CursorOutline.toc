@@ -1,8 +1,8 @@
 ## Interface: 110007, 110100, 110200, 110207, 120000, 11506, 40402, 50001, 100207, 90207, 80300, 70300, 60200, 50400, 40300, 30403, 30300, 20504, 20400, 11200
 ## Title: CursorOutline
-## Notes: Displays a marker at the mouse cursor position when in combat.
+## Notes: Track your cursor with Raid Markers or Class Spec Icons. Supports per-spec profiles.
 ## Author: AAAddons
-## Version: 1.1.2
+## Version: 1.2.0
 ## SavedVariables: CursorOutlineDB
 ## X-Curse-Project-ID: 1225394
 
