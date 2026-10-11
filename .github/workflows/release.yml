@@ -6,8 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: write  # Allows the action to upload the zip to the Release page
-# --------------------------------------
+  contents: write  # Allows the action to create the GitHub release and upload the zip
 
 jobs:
   release:
@@ -24,5 +23,3 @@ jobs:
 
       - name: Package and Upload
         uses: BigWigsMods/packager@v2
-        with:
-          args: -w -c

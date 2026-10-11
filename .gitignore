@@ -40,3 +40,5 @@ luac.out
 *.hex
 
 *.vscode
+# Local Claude Code notes
+CLAUDE.local.md

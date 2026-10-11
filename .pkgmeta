@@ -1,7 +1,6 @@
+package-as: CursorOutline
+
 ignore:
-    - .git
-    - .github
-    - .gitignore
     - Tools
-    - requirements.txt
-    - release.yml
+    - CLAUDE.md
+    - CLAUDE.local.md
