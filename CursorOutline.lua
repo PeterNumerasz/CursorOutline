@@ -7,166 +7,196 @@ local GetCursorPosition = GetCursorPosition
 local UIParent = UIParent
 
 -- FEATURE DETECTION:
--- The addon checks if the Game Client supports Specializations
--- If GetSpecialization exists in the global namespace, the version belong to Group 1 (Spec Support).
--- If not (Vanilla, TBC, WotLK), the version belong to Group 2 (Global Only).
+-- Specializations only exist from MoP onwards. On older clients (Vanilla, TBC, WotLK)
+-- the addon always uses the global profile.
 local GetSpecialization = _G.GetSpecialization
 local GetSpecializationInfo = _G.GetSpecializationInfo
 local SUPPORTS_SPECS = (GetSpecialization ~= nil)
 
--- Path shortcut
-local P = "Interface\\AddOns\\CursorOutline\\Textures\\Specs\\"
+local BASE_SIZE = 38
+addon.MIN_SCALE, addon.MAX_SCALE = 0.5, 3.0
 
--- Mapping WoW Spec IDs to your Filenames
-local SPEC_TEXTURES = {
-    -- Death Knight
-    [250] = P.."DeathKnight_Blood.tga", [251] = P.."DeathKnight_Frost.tga", [252] = P.."DeathKnight_Unholy.tga",
-    -- Demon Hunter
-    [577] = P.."DemonHunter_Havoc.tga", [581] = P.."DemonHunter_Vengeance.tga", [1480] = P.."DemonHunter_Devourer.tga", 
-    -- Druid
-    [102] = P.."Druid_Balance.tga", [103] = P.."Druid_Feral.tga", [104] = P.."Druid_Guardian.tga", [105] = P.."Druid_Restoration.tga",
-    -- Evoker
-    [1467] = P.."Evoker_Devastation.tga", [1468] = P.."Evoker_Preservation.tga", [1473] = P.."Evoker_Augmentation.tga",
-    -- Hunter
-    [253] = P.."Hunter_BeastMastery.tga", [254] = P.."Hunter_Marksmanship.tga", [255] = P.."Hunter_Survival.tga",
-    -- Mage
-    [62] = P.."Mage_Arcane.tga", [63] = P.."Mage_Fire.tga", [64] = P.."Mage_Frost.tga",
-    -- Monk
-    [268] = P.."Monk_Brewmaster.tga", [270] = P.."Monk_Mistweaver.tga", [269] = P.."Monk_Windwalker.tga",
-    -- Paladin
-    [65] = P.."Paladin_Holy.tga", [66] = P.."Paladin_Protection.tga", [70] = P.."Paladin_Retribution.tga",
-    -- Priest
-    [256] = P.."Priest_Discipline.tga", [257] = P.."Priest_Holy.tga", [258] = P.."Priest_Shadow.tga",
-    -- Rogue
-    [259] = P.."Rogue_Assassination.tga", [260] = P.."Rogue_Outlaw.tga", [261] = P.."Rogue_Subtlety.tga",
-    -- Shaman
-    [262] = P.."Shaman_Elemental.tga", [263] = P.."Shaman_Enhancement.tga", [264] = P.."Shaman_Restoration.tga",
-    -- Warlock
-    [265] = P.."Warlock_Affliction.tga", [266] = P.."Warlock_Demonology.tga", [267] = P.."Warlock_Destruction.tga",
-    -- Warrior
-    [71] = P.."Warrior_Arms.tga", [72] = P.."Warrior_Fury.tga", [73] = P.."Warrior_Protection.tga",
+addon.CUSTOM_FILE_INPUT = "CUSTOM_FILE_INPUT"
+local CUSTOM_TEXTURE_PATH = "Interface\\AddOns\\CursorOutline\\Textures\\Custom\\"
+local SPEC_TEXTURE_PATH = "Interface\\AddOns\\CursorOutline\\Textures\\Specs\\"
+
+-- Spec icons: { specID, class tag, file name in Textures/Specs (without .tga), dropdown label }
+local SPEC_ICON_LIST = {
+    { 250, "DEATHKNIGHT", "DeathKnight_Blood", "DK: Blood" },
+    { 251, "DEATHKNIGHT", "DeathKnight_Frost", "DK: Frost" },
+    { 252, "DEATHKNIGHT", "DeathKnight_Unholy", "DK: Unholy" },
+    { 577, "DEMONHUNTER", "DemonHunter_Havoc", "DH: Havoc" },
+    { 581, "DEMONHUNTER", "DemonHunter_Vengeance", "DH: Vengeance" },
+    { 1480, "DEMONHUNTER", "DemonHunter_Devourer", "DH: Devourer" },
+    { 102, "DRUID", "Druid_Balance", "Druid: Balance" },
+    { 103, "DRUID", "Druid_Feral", "Druid: Feral" },
+    { 104, "DRUID", "Druid_Guardian", "Druid: Guardian" },
+    { 105, "DRUID", "Druid_Restoration", "Druid: Restoration" },
+    { 1467, "EVOKER", "Evoker_Devastation", "Evoker: Devastation" },
+    { 1468, "EVOKER", "Evoker_Preservation", "Evoker: Preservation" },
+    { 1473, "EVOKER", "Evoker_Augmentation", "Evoker: Augmentation" },
+    { 253, "HUNTER", "Hunter_BeastMastery", "Hunter: Beast Mastery" },
+    { 254, "HUNTER", "Hunter_Marksmanship", "Hunter: Marksmanship" },
+    { 255, "HUNTER", "Hunter_Survival", "Hunter: Survival" },
+    { 62, "MAGE", "Mage_Arcane", "Mage: Arcane" },
+    { 63, "MAGE", "Mage_Fire", "Mage: Fire" },
+    { 64, "MAGE", "Mage_Frost", "Mage: Frost" },
+    { 268, "MONK", "Monk_Brewmaster", "Monk: Brewmaster" },
+    { 270, "MONK", "Monk_Mistweaver", "Monk: Mistweaver" },
+    { 269, "MONK", "Monk_Windwalker", "Monk: Windwalker" },
+    { 65, "PALADIN", "Paladin_Holy", "Paladin: Holy" },
+    { 66, "PALADIN", "Paladin_Protection", "Paladin: Protection" },
+    { 70, "PALADIN", "Paladin_Retribution", "Paladin: Retribution" },
+    { 256, "PRIEST", "Priest_Discipline", "Priest: Discipline" },
+    { 257, "PRIEST", "Priest_Holy", "Priest: Holy" },
+    { 258, "PRIEST", "Priest_Shadow", "Priest: Shadow" },
+    { 259, "ROGUE", "Rogue_Assassination", "Rogue: Assassination" },
+    { 260, "ROGUE", "Rogue_Outlaw", "Rogue: Outlaw" },
+    { 261, "ROGUE", "Rogue_Subtlety", "Rogue: Subtlety" },
+    { 262, "SHAMAN", "Shaman_Elemental", "Shaman: Elemental" },
+    { 263, "SHAMAN", "Shaman_Enhancement", "Shaman: Enhancement" },
+    { 264, "SHAMAN", "Shaman_Restoration", "Shaman: Restoration" },
+    { 265, "WARLOCK", "Warlock_Affliction", "Warlock: Affliction" },
+    { 266, "WARLOCK", "Warlock_Demonology", "Warlock: Demonology" },
+    { 267, "WARLOCK", "Warlock_Destruction", "Warlock: Destruction" },
+    { 71, "WARRIOR", "Warrior_Arms", "Warrior: Arms" },
+    { 72, "WARRIOR", "Warrior_Fury", "Warrior: Fury" },
+    { 73, "WARRIOR", "Warrior_Protection", "Warrior: Protection" },
+}
+
+-- Texture path -> { class = classTag, label = dropdown label }, used by the options UI
+addon.SPEC_ICONS = {}
+-- Spec ID -> texture path, used as the default icon for new spec profiles
+local SPEC_TEXTURES = {}
+for _, entry in ipairs(SPEC_ICON_LIST) do
+    local specID, class, file, label = unpack(entry)
+    local path = SPEC_TEXTURE_PATH .. file .. ".tga"
+    SPEC_TEXTURES[specID] = path
+    addon.SPEC_ICONS[path] = { class = class, label = label }
+end
+
+local RAID_TARGET_MARKERS = {}
+for i = 1, 8 do
+    RAID_TARGET_MARKERS[i] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
+end
+
+local DEFAULT_APPEARANCE = {
+    mode = "RAID_MARKER",
+    markerIndex = 7,
+    customShape = "",
+    customFilePath = "",
+    customColor = { r = 1, g = 1, b = 1, a = 1 },
+    scale = 1.0,
+    opacity = 1.0,
 }
 
 addon.defaults = {
   profile = {
-    showOutOfCombat = false, 
+    showOutOfCombat = false,
     useSpecProfiles = false,
     showAllShapes = false,
-    global = {
-        mode = "RAID_MARKER",
-        markerIndex = 7,
-        customShape = "", 
-        customFilePath = "",
-        customColor = { r = 1, g = 1, b = 1, a = 1 },
-        scale = 1.0,
-        opacity = 1.0,
-    },
-    specs = {}, 
+    global = DEFAULT_APPEARANCE,
+    specs = {},
   },
-}
-
-local RAID_TARGET_MARKERS = {
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7",
-  "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
 }
 
 local mainFrame = CreateFrame("Frame", "CursorOutlineFrame", UIParent)
 mainFrame:EnableMouse(false)
 mainFrame:SetFrameStrata("TOOLTIP")
+mainFrame:Hide()
 local mainTexture = mainFrame:CreateTexture(nil, "OVERLAY")
+mainTexture:SetAllPoints(mainFrame)
 
 -- -----------------------------------------------------------------------
 -- PROFILE LOGIC
 -- -----------------------------------------------------------------------
 
-function addon:GetActiveProfile()
-    local p = self.db.profile
-    
-    -- GROUP 1: Feature Supported
-    if SUPPORTS_SPECS and p.useSpecProfiles then
-        local specIndex = GetSpecialization()
-        if specIndex then
-            local specID = GetSpecializationInfo(specIndex)
-            if specID then
-                -- Initial Setup for this Spec
-                if not p.specs[specID] then
-                    local defaultIcon = SPEC_TEXTURES[specID]
-                    local startMode = defaultIcon and "CUSTOM" or "RAID_MARKER"
-                    p.specs[specID] = {
-                        mode = startMode,
-                        markerIndex = 7, 
-                        customShape = defaultIcon or "", 
-                        customFilePath = "",
-                        customColor = { r = 1, g = 1, b = 1, a = 1 }, 
-                        scale = 1.0,
-                        opacity = 1.0,
-                    }
-                end
-                return p.specs[specID]
-            end
-        end
+-- Blizzard's CopyTable is not available on every client
+local function DeepCopy(t)
+    local copy = {}
+    for k, v in pairs(t) do
+        copy[k] = type(v) == "table" and DeepCopy(v) or v
     end
-    
-    -- GROUP 2: Feature Not Supported OR User Disabled it
-    -- Fallback to Global Profile
-    if not p.global then p.global = {} end
-    return p.global
+    return copy
 end
 
-function addon:RefreshActiveProfile()
-    self:UpdateMarkerAppearance()
+local function CreateSpecProfile(specID)
+    local profile = DeepCopy(DEFAULT_APPEARANCE)
+    local icon = SPEC_TEXTURES[specID]
+    if icon then
+        profile.mode = "CUSTOM"
+        profile.customShape = icon
+    end
+    return profile
+end
+
+-- Returns the appearance settings currently in use: the per-spec table when spec
+-- profiles are enabled, otherwise the global one.
+function addon:GetActiveProfile()
+    local p = self.db.profile
+
+    if SUPPORTS_SPECS and p.useSpecProfiles then
+        local specIndex = GetSpecialization()
+        local specID = specIndex and GetSpecializationInfo(specIndex)
+        if specID then
+            if not p.specs[specID] then
+                p.specs[specID] = CreateSpecProfile(specID)
+            end
+            return p.specs[specID]
+        end
+    end
+
+    return p.global
 end
 
 -- -----------------------------------------------------------------------
 -- DISPLAY UPDATES
 -- -----------------------------------------------------------------------
 
-local function UpdateXMarkPosition()
+-- Last applied cursor position; lets OnUpdate skip SetPoint while the mouse is idle
+local lastX, lastY
+
+-- OnUpdate only runs while the frame is shown, so a hidden marker costs no CPU
+mainFrame:SetScript("OnUpdate", function()
   local x, y = GetCursorPosition()
+  if x == lastX and y == lastY then return end
+  lastX, lastY = x, y
   local scale = UIParent:GetEffectiveScale()
   mainFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
-end
+end)
+
+-- Force a reposition on the first frame after showing
+mainFrame:SetScript("OnShow", function()
+  lastX, lastY = nil, nil
+end)
 
 function addon:UpdateMarkerAppearance()
   local settings = self:GetActiveProfile()
-  mainFrame:SetSize(38 * settings.scale, 38 * settings.scale)
-  
+  mainFrame:SetSize(BASE_SIZE * settings.scale, BASE_SIZE * settings.scale)
+
   if settings.mode == "CUSTOM" then
-    local textureToUse = settings.customShape
-    if settings.customShape == "CUSTOM_FILE_INPUT" then
-        textureToUse = "Interface\\AddOns\\CursorOutline\\Textures\\Custom\\" .. (settings.customFilePath or "")
+    local texture = settings.customShape
+    if texture == addon.CUSTOM_FILE_INPUT then
+        texture = CUSTOM_TEXTURE_PATH .. (settings.customFilePath or "")
     end
-    
-    if textureToUse and textureToUse ~= "" then
-        mainTexture:SetTexture(textureToUse)
-    else
-        mainTexture:SetTexture("Interface\\BUTTONS\\WHITE8X8")
+    if not texture or texture == "" then
+        texture = "Interface\\BUTTONS\\WHITE8X8"
     end
-    
-    mainTexture:SetVertexColor(settings.customColor.r, settings.customColor.g, settings.customColor.b, settings.customColor.a)
-    mainTexture:SetBlendMode("BLEND") 
+
+    local c = settings.customColor
+    mainTexture:SetTexture(texture)
+    mainTexture:SetVertexColor(c.r, c.g, c.b, c.a)
   else
-    local texturePath = RAID_TARGET_MARKERS[settings.markerIndex]
-    mainTexture:SetTexture(texturePath)
+    mainTexture:SetTexture(RAID_TARGET_MARKERS[settings.markerIndex])
     mainTexture:SetVertexColor(1, 1, 1, settings.opacity)
-    mainTexture:SetBlendMode("BLEND")
   end
-  mainTexture:SetAllPoints(mainFrame)
 end
 
 function addon:UpdateMarkerVisibility()
-  if self.db.profile.showOutOfCombat or InCombatLockdown() or self.testMode then
+  if self.db.profile.showOutOfCombat or self.inCombat then
     mainFrame:Show()
-    mainFrame:SetScript("OnUpdate", UpdateXMarkPosition)
   else
     mainFrame:Hide()
-    mainFrame:SetScript("OnUpdate", nil)
   end
 end
 
@@ -176,49 +206,39 @@ end
 
 function addon:OnInitialize()
   self.db = AceDB:New("CursorOutlineDB", self.defaults, true)
-  mainFrame:SetPoint("CENTER", UIParent, "CENTER"); mainFrame:Hide()
   self:RegisterChatCommand("co", "HandleSlashCommand")
   self:RegisterChatCommand("cursoroutline", "HandleSlashCommand")
-  if self.SetupConfigUI then self:SetupConfigUI() end
+  self:SetupConfigUI()
 end
 
 function addon:OnEnable()
   self:RegisterEvent("PLAYER_REGEN_DISABLED")
   self:RegisterEvent("PLAYER_REGEN_ENABLED")
-  
-  -- Only register spec changes if the client supports specs
   if SUPPORTS_SPECS then
       self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
   end
-  
+
+  -- Track combat state ourselves: InCombatLockdown() is not yet true inside PLAYER_REGEN_DISABLED
+  self.inCombat = InCombatLockdown() and true or false
+
   self:UpdateMarkerAppearance()
   self:UpdateMarkerVisibility()
 end
 
-function addon:PLAYER_SPECIALIZATION_CHANGED()
+function addon:PLAYER_SPECIALIZATION_CHANGED(_, unit)
+    -- On Retail this also fires for group members; only react to our own spec
+    if unit and unit ~= "player" then return end
     self:UpdateMarkerAppearance()
-    if self.ForceRedraw then self:ForceRedraw() end
+    self:RefreshConfigUI()
 end
 
 function addon:PLAYER_REGEN_DISABLED()
-  mainFrame:Show()
-  mainFrame:SetScript("OnUpdate", UpdateXMarkPosition)
-end
-
-function addon:PLAYER_REGEN_ENABLED()
-  if not self.db.profile.showOutOfCombat then
-    mainFrame:Hide()
-    mainFrame:SetScript("OnUpdate", nil)
-  end
-end
-
-function addon:EnableTestMode()
-  self.testMode = true
+  self.inCombat = true
   self:UpdateMarkerVisibility()
 end
 
-function addon:DisableTestMode()
-  self.testMode = false
+function addon:PLAYER_REGEN_ENABLED()
+  self.inCombat = false
   self:UpdateMarkerVisibility()
 end
 
@@ -227,73 +247,51 @@ end
 -- -----------------------------------------------------------------------
 
 function addon:HandleSlashCommand(input)
-  local command, value = input:match("^(%S+)%s*(%S*)$")
-  command = (command or ""):lower()
+  local command, value = input:match("^(%S*)%s*(%S*)")
+  command = command:lower()
 
   if command == "config" then
-    self:openConfigurationUI()
+    self:OpenConfigUI()
   elseif command == "scale" then
-    self:setScale(value)
+    self:SetScaleCommand(value)
   elseif command == "combat" then
-    self:updateCombatVisibility(value)
-  elseif command == "help" or command == "" then
-    self:displayHelp()
+    self:SetCombatCommand(value:lower())
   else
-    self:Print("Unknown command or command handled in UI. Type /co config")
+    self:PrintHelp()
   end
 end
 
-function addon:setScale(value)
-  if not value or value == "" then
-    self:Print("Current scale: " .. self:GetActiveProfile().scale)
-    return
-  end
+function addon:SetScaleCommand(value)
   local scale = tonumber(value)
-  if scale and scale >= 0.5 and scale <= 2.0 then
+  if not scale then
+    self:Print("Current scale: " .. self:GetActiveProfile().scale)
+  elseif scale < self.MIN_SCALE or scale > self.MAX_SCALE then
+    self:Print(("Scale must be between %.1f and %.1f."):format(self.MIN_SCALE, self.MAX_SCALE))
+  else
     self:GetActiveProfile().scale = scale
     self:UpdateMarkerAppearance()
+    self:RefreshConfigUI()
     self:Print("Scale set to " .. scale)
   end
 end
 
-function addon:updateCombatVisibility(value)
+function addon:SetCombatCommand(value)
   if value == "on" then
     self.db.profile.showOutOfCombat = true
   elseif value == "off" then
     self.db.profile.showOutOfCombat = false
+  else
+    self:Print("Usage: /co combat on|off")
+    return
   end
   self:UpdateMarkerVisibility()
+  self:RefreshConfigUI()
+  self:Print(self.db.profile.showOutOfCombat and "Marker is now always shown." or "Marker is now only shown in combat.")
 end
 
-function addon:openConfigurationUI()
-  -- Retail
-  if SettingsPanel then
-      SettingsPanel:Open()
-      local categoryObject = nil
-      if SettingsPanel.GetAllCategories then
-          for _, cat in pairs(SettingsPanel:GetAllCategories()) do
-              if cat.name == addonName then
-                  categoryObject = cat
-                  break
-              end
-          end
-      end
-      if categoryObject then SettingsPanel:SelectCategory(categoryObject) end
-
-  -- LEGACY (Classic / Wrath)
-  else
-    if not InterfaceOptionsFrame then C_AddOns.LoadAddOn("Blizzard_InterfaceOptions") end
-    if InterfaceOptionsFrame_OpenToCategory then
-        InterfaceOptionsFrame_OpenToCategory(addonName)
-        InterfaceOptionsFrame_OpenToCategory(addonName)
-    end
-  end
-  if self.ForceRedraw then self:ForceRedraw() end
-end
-
-function addon:displayHelp()
-  self:Print("CursorOutline Commands:")
-  self:Print("/co config - Open the configuration UI.")
-  self:Print("/co combat <on|off> - Toggle out of combat display.")
-  self:Print("/co scale <number> - Set size.")
+function addon:PrintHelp()
+  self:Print("Commands:")
+  self:Print("/co config - Open the settings.")
+  self:Print("/co combat on|off - on: always show the marker, off: only show it in combat.")
+  self:Print(("/co scale <%.1f-%.1f> - Set the marker size."):format(self.MIN_SCALE, self.MAX_SCALE))
 end
