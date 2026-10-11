@@ -21,6 +21,7 @@ Works on Retail and all current Classic versions.
 | `/co config` | Open settings |
 | `/co combat on/off` | `on`: always show the marker, `off`: only in combat |
 | `/co scale <0.5-3.0>` | Change marker size |
+| `/co whatsnew` | Show what changed in recent versions |
 
 ## Custom textures
 

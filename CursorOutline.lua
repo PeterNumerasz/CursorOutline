@@ -99,6 +99,11 @@ addon.defaults = {
     global = DEFAULT_APPEARANCE,
     specs = {},
   },
+  -- Account-wide, independent of profiles (not to be confused with profile.global above)
+  global = {
+    lastSeenVersion = nil,
+    showWhatsNew = true,
+  },
 }
 
 local mainFrame = CreateFrame("Frame", "CursorOutlineFrame", UIParent)
@@ -200,6 +205,8 @@ end
 -- -----------------------------------------------------------------------
 
 function addon:OnInitialize()
+  -- No saved variables yet means a new user, who doesn't need a changelog
+  self.isFreshInstall = (CursorOutlineDB == nil)
   self.db = AceDB:New("CursorOutlineDB", self.defaults, true)
   self:RegisterChatCommand("co", "HandleSlashCommand")
   self:RegisterChatCommand("cursoroutline", "HandleSlashCommand")
@@ -217,6 +224,7 @@ function addon:OnEnable()
   self.inCombat = InCombatLockdown() and true or false
 
   self:EnableGCD()
+  self:CheckWhatsNew()
   self:UpdateMarkerAppearance()
   self:UpdateMarkerVisibility()
 end
@@ -252,6 +260,8 @@ function addon:HandleSlashCommand(input)
     self:SetScaleCommand(value)
   elseif command == "combat" then
     self:SetCombatCommand(value:lower())
+  elseif command == "whatsnew" then
+    self:ShowWhatsNew()
   else
     self:PrintHelp()
   end
@@ -290,4 +300,5 @@ function addon:PrintHelp()
   self:Print("/co config - Open the settings.")
   self:Print("/co combat on|off - on: always show the marker, off: only show it in combat.")
   self:Print(("/co scale <%.1f-%.1f> - Set the marker size."):format(self.MIN_SCALE, self.MAX_SCALE))
+  self:Print("/co whatsnew - Show the changes in recent versions.")
 end
