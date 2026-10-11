@@ -95,6 +95,17 @@ function addon:GetOptionsTable()
             get = AppearanceGet("opacity"),
             set = AppearanceSet("opacity"),
           },
+          showGCD = {
+            order = 4,
+            type = "toggle",
+            name = "Show Global Cooldown",
+            desc = "Darken the marker while the global cooldown is active and reveal it clockwise as it finishes.",
+            get = function() return addon.db.profile.showGCD end,
+            set = function(_, value)
+              addon.db.profile.showGCD = value
+              addon:EnableGCD()
+            end,
+          },
         },
       },
       appearanceGroup = {
@@ -108,7 +119,7 @@ function addon:GetOptionsTable()
             type = "description",
             name = function()
                if not SUPPORTS_SPECS then
-                  return "Legacy Mode: Using Global Profile (Game version lacks specs)."
+                  return "Settings apply to all characters (this game version has no specializations)."
                elseif addon.db.profile.useSpecProfiles then
                   return "|cff00ff00[Spec Profile Active]|r Settings are saved for your current spec."
                else
@@ -217,19 +228,13 @@ end
 
 function addon:SetupConfigUI()
   AceConfig:RegisterOptionsTable(addonName, self:GetOptionsTable())
-  self.optionsFrame, self.optionsCategoryID = AceConfigDialog:AddToBlizOptions(addonName, addonName)
+  -- The category ID is a number on 12.0+ and must be passed to Settings.OpenToCategory
+  local _, categoryID = AceConfigDialog:AddToBlizOptions(addonName, addonName)
+  self.optionsCategoryID = categoryID
 end
 
 function addon:OpenConfigUI()
-  if Settings and Settings.OpenToCategory then
-    -- Retail and modern Classic clients
-    Settings.OpenToCategory(self.optionsCategoryID)
-  elseif InterfaceOptionsFrame_OpenToCategory then
-    -- Legacy clients. Called twice because the first call often only opens the frame
-    -- without selecting the category (long-standing Blizzard bug).
-    InterfaceOptionsFrame_OpenToCategory(self.optionsFrame)
-    InterfaceOptionsFrame_OpenToCategory(self.optionsFrame)
-  end
+  Settings.OpenToCategory(self.optionsCategoryID)
 end
 
 -- Rebuilds the options panel if it is open, so dynamic hidden/values callbacks re-run
