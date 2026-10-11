@@ -20,4 +20,5 @@ Libs\AceConfig-3.0\AceConfig-3.0.xml
 ## Addon Files
 CursorOutline.lua
 GCD.lua
+WhatsNew.lua
 ConfigUI.lua
