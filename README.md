@@ -2,13 +2,14 @@
 
 A small WoW addon that sticks a marker on your mouse cursor so you can actually find it during busy fights.
 
-Works on Retail, Classic and older clients (Vanilla, TBC, WotLK).
+Works on Retail and all current Classic versions.
 
 ## Features
 
 - Use a raid marker (Star, Skull, X, ...) or a class/spec icon as the cursor marker.
 - Recolor icons and shapes with a color picker.
 - Show it only in combat, or all the time.
+- Optional global cooldown sweep: the marker flashes and refills clockwise while the GCD runs.
 - On Retail, settings are saved per spec, and the icon switches when you change spec.
 - Doesn't touch actual raid targets, so it won't conflict with DBM, BigWigs, MRT, etc.
 

@@ -7,7 +7,7 @@ local GetCursorPosition = GetCursorPosition
 local UIParent = UIParent
 
 -- FEATURE DETECTION:
--- Specializations only exist from MoP onwards. On older clients (Vanilla, TBC, WotLK)
+-- Specializations only exist on Retail and MoP Classic. On the other Classic flavors
 -- the addon always uses the global profile.
 local GetSpecialization = _G.GetSpecialization
 local GetSpecializationInfo = _G.GetSpecializationInfo
@@ -95,6 +95,7 @@ addon.defaults = {
     showOutOfCombat = false,
     useSpecProfiles = false,
     showAllShapes = false,
+    showGCD = false,
     global = DEFAULT_APPEARANCE,
     specs = {},
   },
@@ -106,22 +107,14 @@ mainFrame:SetFrameStrata("TOOLTIP")
 mainFrame:Hide()
 local mainTexture = mainFrame:CreateTexture(nil, "OVERLAY")
 mainTexture:SetAllPoints(mainFrame)
+addon.markerFrame = mainFrame
 
 -- -----------------------------------------------------------------------
 -- PROFILE LOGIC
 -- -----------------------------------------------------------------------
 
--- Blizzard's CopyTable is not available on every client
-local function DeepCopy(t)
-    local copy = {}
-    for k, v in pairs(t) do
-        copy[k] = type(v) == "table" and DeepCopy(v) or v
-    end
-    return copy
-end
-
 local function CreateSpecProfile(specID)
-    local profile = DeepCopy(DEFAULT_APPEARANCE)
+    local profile = CopyTable(DEFAULT_APPEARANCE)
     local icon = SPEC_TEXTURES[specID]
     if icon then
         profile.mode = "CUSTOM"
@@ -174,8 +167,9 @@ function addon:UpdateMarkerAppearance()
   local settings = self:GetActiveProfile()
   mainFrame:SetSize(BASE_SIZE * settings.scale, BASE_SIZE * settings.scale)
 
+  local texture, isTinted
   if settings.mode == "CUSTOM" then
-    local texture = settings.customShape
+    texture = settings.customShape
     if texture == addon.CUSTOM_FILE_INPUT then
         texture = CUSTOM_TEXTURE_PATH .. (settings.customFilePath or "")
     end
@@ -184,20 +178,21 @@ function addon:UpdateMarkerAppearance()
     end
 
     local c = settings.customColor
-    mainTexture:SetTexture(texture)
     mainTexture:SetVertexColor(c.r, c.g, c.b, c.a)
+    isTinted = (c.r + c.g + c.b) < 2.7 -- near-white counts as untinted
   else
-    mainTexture:SetTexture(RAID_TARGET_MARKERS[settings.markerIndex])
+    texture = RAID_TARGET_MARKERS[settings.markerIndex]
     mainTexture:SetVertexColor(1, 1, 1, settings.opacity)
+    isTinted = false
   end
+  mainTexture:SetTexture(texture)
+
+  -- The GCD swipe uses the marker's own texture so it only covers the icon's shape
+  self:UpdateGCDTexture(texture, isTinted)
 end
 
 function addon:UpdateMarkerVisibility()
-  if self.db.profile.showOutOfCombat or self.inCombat then
-    mainFrame:Show()
-  else
-    mainFrame:Hide()
-  end
+  mainFrame:SetShown(self.db.profile.showOutOfCombat or self.inCombat)
 end
 
 -- -----------------------------------------------------------------------
@@ -221,6 +216,7 @@ function addon:OnEnable()
   -- Track combat state ourselves: InCombatLockdown() is not yet true inside PLAYER_REGEN_DISABLED
   self.inCombat = InCombatLockdown() and true or false
 
+  self:EnableGCD()
   self:UpdateMarkerAppearance()
   self:UpdateMarkerVisibility()
 end
